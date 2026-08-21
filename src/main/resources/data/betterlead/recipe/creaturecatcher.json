@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EIE",
+    "SLS",
+    "EIE"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "L": { "item": "minecraft:lead" },
+    "E": { "item": "minecraft:ender_pearl" },
+    "S": { "item": "minecraft:slime_ball" }
+  },
+  "result": {
+    "id": "betterlead:creaturecatcher",
+    "count": 1
+  }
+}

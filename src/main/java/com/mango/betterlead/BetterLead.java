@@ -1,6 +1,7 @@
 package com.mango.betterlead;
 
 import com.mango.betterlead.item.ModItems;
+import com.mango.betterlead.item.CreatureCatcherItem;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -13,6 +14,10 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -25,6 +30,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -79,5 +85,24 @@ public class BetterLead {
     public void onServerStarting(ServerStartingEvent event)
     {
 
+    }
+
+    @SubscribeEvent
+    public void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        if (!(event.getTarget() instanceof LivingEntity target)) {
+            return;
+        }
+
+        Player player = event.getEntity();
+        ItemStack stack = player.getItemInHand(event.getHand());
+        if (!(stack.getItem() instanceof CreatureCatcherItem creatureCatcher)) {
+            return;
+        }
+
+        InteractionResult result = creatureCatcher.tryCapture(player, target, event.getHand());
+        if (result.consumesAction()) {
+            event.setCanceled(true);
+            event.setCancellationResult(result);
+        }
     }
 }

@@ -3,15 +3,15 @@ package com.mango.betterlead.item;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
-import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -19,31 +19,20 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.entity.EntityType;
 
-
-public class CreatureCatcherItem extends Item
-{
-    public CreatureCatcherItem(Properties properties)
-    {
+public class CreatureCatcherItem extends Item {
+    public CreatureCatcherItem(Properties properties) {
         super(properties);
     }
 
-    //@Override
-   // public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-     //   ItemStack stack = player.getItemInHand(hand);
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return InteractionResult.PASS;
+        }
 
-     //   if (!level.isClientSide)
-     //   {
-            //stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
-            //player.displayClientMessage(Component.literal("No Target"), true);
-      //  }
-
-        //return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
-    //}
-        @Override
-        public InteractionResult useOn(UseOnContext context) {
-            ItemStack stack = context.getItemInHand();
+            ItemStack stack = player.getItemInHand(context.getHand());
             Level level = context.getLevel();
 
             if (!isFilled(stack)) {
@@ -80,6 +69,8 @@ public class CreatureCatcherItem extends Item
 
             catcherData.remove("CapturedEntity");
             stack.set(DataComponents.CUSTOM_DATA, CustomData.of(catcherData));
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(context.getHand()));
+            player.getInventory().setChanged();
 
             return InteractionResult.SUCCESS;
         }
@@ -92,13 +83,19 @@ public class CreatureCatcherItem extends Item
     @Override
     public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity target, InteractionHand hand)
     {
+        return tryCapture(player, target, hand);
+    }
+
+    public InteractionResult tryCapture(Player player, LivingEntity target, InteractionHand hand) {
+        ItemStack heldStack = player.getItemInHand(hand);
+
         if (target instanceof Player) {
             return InteractionResult.PASS;
         }
         else if (target instanceof EnderDragon || target instanceof WitherBoss) {
             return InteractionResult.PASS;
         }
-        else if (isFilled(stack)) {
+        else if (isFilled(heldStack)) {
             player.displayClientMessage(Component.literal("Already contains a creature!"), true);
             return InteractionResult.PASS;
         }
@@ -116,16 +113,16 @@ public class CreatureCatcherItem extends Item
                 BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()).toString()
         );
 
-        CompoundTag catcherData = stack
+        CompoundTag catcherData = heldStack
                 .getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
                 .copyTag();
 
         catcherData.put("CapturedEntity", capturedEntity);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(catcherData));
+        heldStack.set(DataComponents.CUSTOM_DATA, CustomData.of(catcherData));
+        player.getInventory().setChanged();
 
 
         target.discard();
-        stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
 
         return InteractionResult.SUCCESS;
 
