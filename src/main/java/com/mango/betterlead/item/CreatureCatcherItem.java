@@ -8,9 +8,12 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -66,6 +69,14 @@ public class CreatureCatcherItem extends Item {
             });
 
             level.addFreshEntity(releasedEntity);
+            level.playSound(
+                    null,
+                    spawnPos,
+                    SoundEvents.PLAYER_TELEPORT,
+                    SoundSource.PLAYERS,
+                    1.0F,
+                    1.0F
+            );
 
             catcherData.remove("CapturedEntity");
             stack.set(DataComponents.CUSTOM_DATA, CustomData.of(catcherData));
@@ -92,7 +103,7 @@ public class CreatureCatcherItem extends Item {
         if (target instanceof Player) {
             return InteractionResult.PASS;
         }
-        else if (target instanceof EnderDragon || target instanceof WitherBoss) {
+        else if (target instanceof EnderDragon || target instanceof WitherBoss || target instanceof Warden) {
             return InteractionResult.PASS;
         }
         else if (isFilled(heldStack)) {
@@ -102,7 +113,7 @@ public class CreatureCatcherItem extends Item {
 
 
         if (player.level().isClientSide) {
-            player.displayClientMessage(Component.literal("Yoiked!"), true);
+            player.displayClientMessage(Component.literal("Yoinked!"), true);
             return InteractionResult.SUCCESS;
         }
 
@@ -123,6 +134,14 @@ public class CreatureCatcherItem extends Item {
 
 
         target.discard();
+        player.level().playSound(
+                null,
+                target.blockPosition(),
+                SoundEvents.PLAYER_TELEPORT,
+                SoundSource.PLAYERS,
+                1.0F,
+                1.0F
+        );
 
         return InteractionResult.SUCCESS;
 
